@@ -121,7 +121,7 @@ async def livegame(username: str):
     for blue, red in zip(team_blue, team_red):
         def format_player(participant):
             rank = format_rank(tiers[participant.summoner]) if participant.summoner in tiers else "UNRANKED"
-            return "{:<10}{}".format(participant.champion.name, rank
+            return "{:<10}{}".format(participant.champion.name, rank)
 
         formatted_blue = format_player(blue)
         formatted_red = format_player(red)
