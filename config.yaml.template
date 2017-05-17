@@ -1,2 +1,12 @@
-discord_token: "your bot token here"
-riot_token: "riot api key here"
+discord_token: ""
+riot_token: ""
+
+bot:
+  command_prefix: "!"
+  description: "The seaweed is always greener\nIn somebody else's lake"
+
+username: "Ariel"
+playing: "Under the Sea"
+
+admin_role_names: [""]
+admin_user_ids: [""]
