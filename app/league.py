@@ -3,14 +3,16 @@ from cassiopeia import riotapi
 
 from discord.ext import commands
 
+from config import config
+
 class League:
     """
     Commands related to League of Legends
     """
 
-    def __init__(self, bot, token):
+    def __init__(self, bot):
         riotapi.set_region("EUW")
-        riotapi.set_api_key(token)
+        riotapi.set_api_key(config["riot_token"])
 
         self.bot = bot
 
