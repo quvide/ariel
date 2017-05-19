@@ -1,9 +1,21 @@
 import cassiopeia
 from cassiopeia import riotapi
 
+import discord
 from discord.ext import commands
 
+from enum import Enum
 from config import config
+import random
+
+def add_random_footer(em):
+    em.set_footer(text=random.choice(config["quotes"]))
+
+class Lanes(Enum):
+    top_lane = "top"
+    jungle = "jungle"
+    mid_lane = "mid"
+    bot_lane = "bot"
 
 class League:
     """
@@ -26,18 +38,54 @@ class League:
             return tier == cassiopeia.type.core.common.Tier.challenger or tier == cassiopeia.type.core.common.Tier.master
 
         return "{tier}{tier_num} ({lp} LP)".format(
-            tier = league.tier.value,
+            tier = league.tier.value[0] + league.tier.value[1:].lower(),
             tier_num = (" " + league.entries[0].division.value) if not is_challenger_or_master(league.tier) else "",
             lp = league.entries[0].league_points
         )
 
-    @commands.command()
-    async def lastgame(self, username: str):
+    @staticmethod
+    def format_winrate(wins, losses):
+        return "{}W/{}L ({:.1f}%)".format(
+            wins,
+            losses,
+            100*wins/(wins+losses)
+        )
+
+    @staticmethod
+    def champion_image_url(file):
+        return "http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}".format(
+            config["lol_version"],
+            file
+        )
+
+    @staticmethod
+    def profile_icon_url(id):
+        return "http://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(
+            config["lol_version"],
+            id
+        )
+
+    @commands.command(pass_context = True)
+    async def lastgame(self, ctx, username: str):
         """
         Shows brief statistics from the player's last game
         """
-        summoner = riotapi.get_summoner_by_name(username)
-        game = summoner.recent_games()[0]
+
+        # We expect this command to take a while to run
+        self.bot.send_typing(ctx.message.channel)
+
+        try:
+            summoner = riotapi.get_summoner_by_name(username)
+        except:
+            await self.bot.say("Couldn't find that summoner!")
+            return
+
+        try:
+            game = summoner.recent_games()[0]
+        except:
+            await self.bot.say("Couldn't find recent games!")
+            return
+
         stats = game.stats
 
         def format_timestamp(seconds):
@@ -49,59 +97,65 @@ class League:
 
             return "{}:{:0>2}".format(minutes, seconds)
 
-        await self.bot.say((
-            "```\n" +
-            "Game: {win} in {time}\n"
-            "Champion: {champion} in {lane} \n" +
-            "Stats: {kills}/{deaths}/{assists} and {cs} cs\n" +
-            "Spells: {spell_d} and {spell_f}\n" +
-            "```"
-        ).format(
-            win = "won" if stats.win else "lost",
-            time = format_timestamp(stats.time_played),
 
-            champion = game.champion,
-            lane = stats.lane.value,
-            kills = stats.kills,
-            deaths = stats.deaths,
-            assists = stats.assists,
-            cs = stats.minion_kills,
+        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=0xDEADBF)
 
-            spell_d = game.summoner_spell_d.name,
-            spell_f = game.summoner_spell_f.name,
+        em.set_thumbnail(url=League.champion_image_url(game.champion.image.link))
+
+        em.add_field(name="Stats", value="{}/{}/{} ({})".format(
+            stats.kills,
+            stats.deaths,
+            stats.assists,
+            stats.minion_kills
         ))
 
-    @commands.command()
-    async def stats(self, username: str):
+        em.add_field(name="Spells", value="{} and {}".format(game.summoner_spell_d.name, game.summoner_spell_f.name))
+
+        add_random_footer(em)
+
+        await self.bot.say(embed=em)
+
+    @commands.command(pass_context = True)
+    async def stats(self, ctx, username: str):
         """
         Shows solo ranked standing of player
         """
 
-        summoner = riotapi.get_summoner_by_name(username)
+        # We expect this command to take a while to run
+        self.bot.send_typing(ctx.message.channel)
+
+        try:
+            summoner = riotapi.get_summoner_by_name(username)
+        except:
+            await self.bot.say("Couldn't find that summoner!")
+            return
+
         leagues = summoner.league_entries()
 
-        league = None
-        for league_ in leagues:
-            if league_.queue == cassiopeia.type.core.common.Queue.ranked_solo:
-                league = league_
+        ranked = None
+        for league in leagues:
+            if league.queue == cassiopeia.type.core.common.Queue.ranked_solo:
+                ranked = league
                 break
 
-        if league:
-            await self.bot.say((
-                "```\n" +
-                "{rank} with {wins}W/{losses}L ({percent:.1f}%)\n" +
-                "```"
-            ).format(
-                name = summoner.name,
-                rank = League.format_rank(league),
-                wins = league.entries[0].wins,
-                losses = league.entries[0].losses,
-                percent = 100*league.entries[0].wins/(league.entries[0].wins+league.entries[0].losses)
-            ))
-        else:
-            await self.bot.say("{name} is unranked!".format(name = summoner.name))
+        em = discord.Embed(title=summoner.name, description="Level {}".format(summoner.level), colour=0xDEADBF)
 
-    @commands.command(pass_context = True)
+        em.set_thumbnail(url=League.profile_icon_url(summoner.profile_icon_id))
+
+        if ranked:
+            em.add_field(
+                name="Ranked",
+                value="{}\n{}".format(
+                    League.format_rank(league),
+                    League.format_winrate(league.entries[0].wins, league.entries[0].losses)
+                )
+            )
+
+        add_random_footer(em)
+
+        await self.bot.say(embed=em)
+
+    @commands.command(pass_context=True)
     async def livegame(self, ctx, username: str):
         """
         Shows champions and their ranks in the current game
@@ -110,8 +164,18 @@ class League:
         # We expect this command to take a while to run
         self.bot.send_typing(ctx.message.channel)
 
-        summoner = riotapi.get_summoner_by_name(username)
-        game = summoner.current_game()
+        try:
+            summoner = riotapi.get_summoner_by_name(username)
+        except:
+            await self.bot.say("Couldn't find that summoner!")
+            return
+
+        try:
+            game = summoner.current_game()
+        except:
+            await self.bot.say("Seems like that summoner is not in a game!")
+            return
+
         participants = game.participants
 
         entries = riotapi.get_league_entries_by_summoner([p.summoner for p in participants])
