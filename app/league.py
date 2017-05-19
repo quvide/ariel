@@ -66,13 +66,15 @@ class League:
         )
 
     @commands.command(pass_context = True)
-    async def lastgame(self, ctx, username: str):
+    async def lastgame(self, ctx, username: str, n: int=1):
         """
-        Shows brief statistics from the player's last game
+        [summoner] (n) Shows brief statistics from the player's last game
         """
 
         # We expect this command to take a while to run
         self.bot.send_typing(ctx.message.channel)
+
+        n = n-1
 
         try:
             summoner = riotapi.get_summoner_by_name(username)
@@ -81,7 +83,7 @@ class League:
             return
 
         try:
-            game = summoner.recent_games()[0]
+            game = summoner.recent_games()[n]
         except:
             await self.bot.say("Couldn't find recent games!")
             return
