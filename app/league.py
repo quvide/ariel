@@ -98,7 +98,7 @@ class League:
             return "{}:{:0>2}".format(minutes, seconds)
 
 
-        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=0xDEADBF)
+        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=config["embed_colour"])
 
         em.set_thumbnail(url=League.champion_image_url(game.champion.image.link))
 
@@ -138,7 +138,7 @@ class League:
                 ranked = league
                 break
 
-        em = discord.Embed(title=summoner.name, description="Level {}".format(summoner.level), colour=0xDEADBF)
+        em = discord.Embed(title=summoner.name, description="Level {}".format(summoner.level), colour=config["embed_colour"])
 
         em.set_thumbnail(url=League.profile_icon_url(summoner.profile_icon_id))
 
