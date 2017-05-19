@@ -10,3 +10,7 @@ playing: "Under the Sea"
 
 admin_role_names: [""]
 admin_user_ids: [""]
+
+lol_version: "7.10.1"
+
+quotes: ["Blub blub! I'm a fish!"]
