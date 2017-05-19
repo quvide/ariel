@@ -25,7 +25,7 @@ class Admin:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context = True)
+    @commands.command(pass_context=True, no_pm=True)
     @is_authorized()
     async def delete(self, ctx, _id: str, n: int):
         """
