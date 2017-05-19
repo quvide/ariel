@@ -11,6 +11,40 @@ import random
 def add_random_footer(em):
     em.set_footer(text=random.choice(config["quotes"]))
 
+def format_rank(league):
+    """
+    Formats a given league nicely. Doesn't work yet if there's multiple entries in the league.
+    """
+
+    def is_challenger_or_master(tier):
+        return tier == cassiopeia.type.core.common.Tier.challenger or tier == cassiopeia.type.core.common.Tier.master
+
+    return "{tier}{tier_num} ({lp} LP)".format(
+        tier = league.tier.value[0] + league.tier.value[1:].lower(),
+        tier_num = (" " + league.entries[0].division.value) if not is_challenger_or_master(league.tier) else "",
+        lp = league.entries[0].league_points
+    )
+
+def format_winrate(wins, losses):
+    return "{}W/{}L ({:.1f}%)".format(
+        wins,
+        losses,
+        100*wins/(wins+losses)
+    )
+
+def champion_image_url(file):
+    return "http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}".format(
+        config["lol_version"],
+        file
+    )
+
+def profile_icon_url(id):
+    return "http://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(
+        config["lol_version"],
+        id
+    )
+
+
 class Lanes(Enum):
     top_lane = "top"
     jungle = "jungle"
@@ -27,43 +61,6 @@ class League:
         riotapi.set_api_key(config["riot_token"])
 
         self.bot = bot
-
-    @staticmethod
-    def format_rank(league):
-        """
-        Formats a given league nicely. Doesn't work yet if there's multiple entries in the league.
-        """
-
-        def is_challenger_or_master(tier):
-            return tier == cassiopeia.type.core.common.Tier.challenger or tier == cassiopeia.type.core.common.Tier.master
-
-        return "{tier}{tier_num} ({lp} LP)".format(
-            tier = league.tier.value[0] + league.tier.value[1:].lower(),
-            tier_num = (" " + league.entries[0].division.value) if not is_challenger_or_master(league.tier) else "",
-            lp = league.entries[0].league_points
-        )
-
-    @staticmethod
-    def format_winrate(wins, losses):
-        return "{}W/{}L ({:.1f}%)".format(
-            wins,
-            losses,
-            100*wins/(wins+losses)
-        )
-
-    @staticmethod
-    def champion_image_url(file):
-        return "http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}".format(
-            config["lol_version"],
-            file
-        )
-
-    @staticmethod
-    def profile_icon_url(id):
-        return "http://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(
-            config["lol_version"],
-            id
-        )
 
     @commands.command(pass_context = True)
     async def lastgame(self, ctx, username: str, n: int=1):
@@ -102,7 +99,7 @@ class League:
 
         em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=config["embed_colour"])
 
-        em.set_thumbnail(url=League.champion_image_url(game.champion.image.link))
+        em.set_thumbnail(url=champion_image_url(game.champion.image.link))
 
         em.add_field(name="Stats", value="{}/{}/{} ({})".format(
             stats.kills,
@@ -132,7 +129,11 @@ class League:
             await self.bot.say("Couldn't find that summoner!")
             return
 
-        leagues = summoner.league_entries()
+        try:
+            leagues = summoner.league_entries()
+        except:
+            await self.bot.say("That summoner isn't ranked!")
+            return
 
         ranked = None
         for league in leagues:
@@ -142,14 +143,14 @@ class League:
 
         em = discord.Embed(title=summoner.name, description="Level {}".format(summoner.level), colour=config["embed_colour"])
 
-        em.set_thumbnail(url=League.profile_icon_url(summoner.profile_icon_id))
+        em.set_thumbnail(url=profile_icon_url(summoner.profile_icon_id))
 
         if ranked:
             em.add_field(
                 name="Ranked",
                 value="{}\n{}".format(
-                    League.format_rank(league),
-                    League.format_winrate(league.entries[0].wins, league.entries[0].losses)
+                    format_rank(league),
+                    format_winrate(league.entries[0].wins, league.entries[0].losses)
                 )
             )
 
@@ -200,7 +201,7 @@ class League:
         lines = []
         for blue, red in zip(team_blue, team_red):
             def format_player(participant):
-                rank = League.format_rank(tiers[participant.summoner]) if participant.summoner in tiers else "UNRANKED"
+                rank = format_rank(tiers[participant.summoner]) if participant.summoner in tiers else "UNRANKED"
                 return "{:<10}{}".format(participant.champion.name, rank)
 
             formatted_blue = format_player(blue)
