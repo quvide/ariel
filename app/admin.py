@@ -31,9 +31,7 @@ class Admin:
         """
         [user_id] [n] Deletes last n messages by user from this channel
         """
-        print("what")
 
-        return
         await self.bot.delete_message(ctx.message)
 
         user = await self.bot.get_user_info(_id)
