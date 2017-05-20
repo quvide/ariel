@@ -51,6 +51,16 @@ class Lanes(Enum):
     mid_lane = "mid"
     bot_lane = "bot"
 
+class Map(Enum):
+    summoners_rift = "Summoner's Rift"
+    twisted_treeline = "Twisted Treeline"
+    howling_abyss = "Howling Abyss"
+
+class SubType(Enum):
+    normal_fives = "Normal"
+    ranked_solo = "Ranked Solo"
+
+
 class League:
     """
     Commands related to League of Legends
@@ -97,7 +107,9 @@ class League:
             return "{}:{:0>2}".format(minutes, seconds)
 
 
-        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=config["embed_colour"])
+        colour = 0x418df2 if stats.win else 0xf24141
+
+        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=colour)
 
         em.set_thumbnail(url=champion_image_url(game.champion.image.link))
 
@@ -109,6 +121,9 @@ class League:
         ))
 
         em.add_field(name="Spells", value="{} and {}".format(game.summoner_spell_d.name, game.summoner_spell_f.name))
+
+        em.add_field(name="Map", value="{}".format(Map[game.map.name].value))
+        em.add_field(name="Mode", value="{}".format(SubType[game.sub_type.name].value))
 
         add_random_footer(em)
 
