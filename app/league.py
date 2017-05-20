@@ -79,7 +79,7 @@ class League:
         """
 
         # We expect this command to take a while to run
-        self.bot.send_typing(ctx.message.channel)
+        await self.bot.send_typing(ctx.message.channel)
 
         n = n-1
 
@@ -136,7 +136,7 @@ class League:
         """
 
         # We expect this command to take a while to run
-        self.bot.send_typing(ctx.message.channel)
+        await self.bot.send_typing(ctx.message.channel)
 
         try:
             summoner = riotapi.get_summoner_by_name(username)
@@ -163,10 +163,12 @@ class League:
         if ranked:
             em.add_field(
                 name="Ranked",
-                value="{}\n{}".format(
-                    format_rank(league),
-                    format_winrate(league.entries[0].wins, league.entries[0].losses)
-                )
+                value=format_rank(league)
+            )
+
+            em.add_field(
+                name="Winrate",
+                value=format_winrate(league.entries[0].wins, league.entries[0].losses)
             )
 
         add_random_footer(em)
@@ -180,7 +182,7 @@ class League:
         """
 
         # We expect this command to take a while to run
-        self.bot.send_typing(ctx.message.channel)
+        await self.bot.send_typing(ctx.message.channel)
 
         try:
             summoner = riotapi.get_summoner_by_name(username)
