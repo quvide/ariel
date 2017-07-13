@@ -79,6 +79,13 @@ class League:
 
         self.bot = bot
 
+    async def get_summoner_by_name_or_fail(self, username):
+        try:
+            summoner = riotapi.get_summoner_by_name(username)
+            return summoner
+        except:
+            await self.bot.say("Couldn't find that summoner!")
+
     @commands.command(pass_context=True)
     async def lastgame(self, ctx, username: str, n: int=1):
         """
@@ -90,10 +97,8 @@ class League:
 
         n = n-1
 
-        try:
-            summoner = riotapi.get_summoner_by_name(username)
-        except:
-            await self.bot.say("Couldn't find that summoner!")
+        summoner = await self.get_summoner_by_name_or_fail(username)
+        if not summoner:
             return
 
         try:
@@ -148,10 +153,8 @@ class League:
         # We expect this command to take a while to run
         await self.bot.send_typing(ctx.message.channel)
 
-        try:
-            summoner = riotapi.get_summoner_by_name(username)
-        except:
-            await self.bot.say("Couldn't find that summoner!")
+        summoner = await self.get_summoner_by_name_or_fail(username)
+        if not summoner:
             return
 
         try:
@@ -198,10 +201,8 @@ class League:
         # We expect this command to take a while to run
         await self.bot.send_typing(ctx.message.channel)
 
-        try:
-            summoner = riotapi.get_summoner_by_name(username)
-        except:
-            await self.bot.say("Couldn't find that summoner!")
+        summoner = await self.get_summoner_by_name_or_fail(username)
+        if not summoner:
             return
 
         try:
