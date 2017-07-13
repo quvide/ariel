@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from config import config
 
+
 def is_authorized():
     """
     Decorator that checks if the user is an admin
@@ -16,6 +17,7 @@ def is_authorized():
         return ctx.message.author.id in config["admin_user_ids"]
 
     return commands.check(predicate)
+
 
 class Admin:
     """

@@ -8,8 +8,10 @@ from enum import Enum
 from config import config
 import random
 
+
 def add_random_footer(em):
     em.set_footer(text=random.choice(config["quotes"]))
+
 
 def format_rank(league):
     """
@@ -20,10 +22,11 @@ def format_rank(league):
         return tier == cassiopeia.type.core.common.Tier.challenger or tier == cassiopeia.type.core.common.Tier.master
 
     return "{tier}{tier_num} ({lp} LP)".format(
-        tier = league.tier.value[0] + league.tier.value[1:].lower(),
-        tier_num = (" " + league.entries[0].division.value) if not is_challenger_or_master(league.tier) else "",
-        lp = league.entries[0].league_points
+        tier=league.tier.value[0] + league.tier.value[1:].lower(),
+        tier_num=(" " + league.entries[0].division.value) if not is_challenger_or_master(league.tier) else "",
+        lp=league.entries[0].league_points
     )
+
 
 def format_winrate(wins, losses):
     return "{}W/{}L ({:.1f}%)".format(
@@ -32,11 +35,13 @@ def format_winrate(wins, losses):
         100*wins/(wins+losses)
     )
 
+
 def champion_image_url(file):
     return "http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}".format(
         config["lol_version"],
         file
     )
+
 
 def profile_icon_url(id):
     return "http://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(
@@ -51,10 +56,12 @@ class Lanes(Enum):
     mid_lane = "mid"
     bot_lane = "bot"
 
+
 class Map(Enum):
     summoners_rift = "Summoner's Rift"
     twisted_treeline = "Twisted Treeline"
     howling_abyss = "Howling Abyss"
+
 
 class SubType(Enum):
     normal_fives = "Normal"
@@ -72,7 +79,7 @@ class League:
 
         self.bot = bot
 
-    @commands.command(pass_context = True)
+    @commands.command(pass_context=True)
     async def lastgame(self, ctx, username: str, n: int=1):
         """
         [summoner] (n) Shows brief statistics from the player's last game
@@ -106,10 +113,13 @@ class League:
 
             return "{}:{:0>2}".format(minutes, seconds)
 
-
         colour = 0x418df2 if stats.win else 0xf24141
 
-        em = discord.Embed(title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)), description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value), colour=colour)
+        em = discord.Embed(
+            title=("Victory" if game.stats.win else "Defeat") + " in {}".format(format_timestamp(stats.time_played)),
+            description="{} in {}".format(game.champion.name, Lanes[stats.lane.name].value),
+            colour=colour
+        )
 
         em.set_thumbnail(url=champion_image_url(game.champion.image.link))
 
@@ -129,7 +139,7 @@ class League:
 
         await self.bot.say(embed=em)
 
-    @commands.command(pass_context = True)
+    @commands.command(pass_context=True)
     async def stats(self, ctx, username: str):
         """
         Shows solo ranked standing of player
@@ -156,7 +166,11 @@ class League:
                 ranked = league
                 break
 
-        em = discord.Embed(title=summoner.name, description="Level {}".format(summoner.level), colour=config["embed_colour"])
+        em = discord.Embed(
+            title=summoner.name,
+            description="Level {}".format(summoner.level),
+            colour=config["embed_colour"]
+        )
 
         em.set_thumbnail(url=profile_icon_url(summoner.profile_icon_id))
 
