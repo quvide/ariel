@@ -16,3 +16,6 @@ lol_version: "7.10.1"
 quotes: ["Blub blub! I'm a fish!"]
 
 embed_colour: 0x418df2
+
+autodel_channel_ids: [""]
+autodel_time: 5.0

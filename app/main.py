@@ -1,6 +1,8 @@
 import random
 import logging
 import discord
+import asyncio
+import datetime
 
 from discord.ext import commands
 from config import config
@@ -18,8 +20,20 @@ bot.add_cog(Admin(bot))
 async def on_ready():
     print("Logged in")
 
-    await bot.edit_profile(username=config["username"])
+    for server in bot.servers:
+        await bot.change_nickname(server.me, config["username"])
+
     await bot.change_presence(game=discord.Game(name=config["playing"]))
+
+    while True:
+        for server in bot.servers:
+            for channel in server.channels:
+                if channel.id in config["autodel_channel_ids"]:
+                    time = datetime.datetime.utcnow()
+                    d = datetime.timedelta(seconds=config["autodel_time"])
+                    await bot.purge_from(channel, before=time-d)
+
+        await asyncio.sleep(1)
 
 
 @bot.command()
