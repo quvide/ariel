@@ -44,3 +44,13 @@ class Admin:
                 to_remove.add(message)
 
         await self.bot.delete_messages(to_remove)
+
+    @commands.command(pass_context=True)
+    @is_authorized()
+    async def nick(self, ctx, nick: str):
+        await self.bot.change_nickname(ctx.message.server.me, nick)
+
+    @commands.command()
+    @is_authorized()
+    async def playing(self, playing: str):
+        await self.bot.change_presence(game=discord.Game(name=playing))
